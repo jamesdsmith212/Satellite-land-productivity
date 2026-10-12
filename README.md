@@ -196,8 +196,8 @@ establishment contributes to the trajectory. Spring crops begin on 15
 February. Exact sowing and harvest dates are still missing and the interface
 labels inferred stages as estimates.
 
-The formulas, trajectory thresholds and native-resolution rules
-and research caveat are documented in
+The formulas, trajectory thresholds, native-resolution rules and research
+caveat are documented in
 [`docs/phase-2-satellite-method.md`](docs/phase-2-satellite-method.md).
 
 ## Build the historical performance map
