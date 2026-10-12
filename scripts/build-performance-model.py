@@ -25,7 +25,6 @@ from farm_config import (
     PERFORMANCE_SUMMARY_PATH,
     PROFILE,
     PUBLIC_PERFORMANCE_DIR,
-    RADAR_SUMMARY_PATH,
     WEATHER_SUMMARY_PATH,
 )
 from satellite_features import (
@@ -75,11 +74,6 @@ def parse_args() -> argparse.Namespace:
         "--daily-weather",
         type=Path,
         default=DAILY_WEATHER_PATH,
-    )
-    parser.add_argument(
-        "--radar-summary",
-        type=Path,
-        default=RADAR_SUMMARY_PATH,
     )
     parser.add_argument(
         "--landsat-summary",
@@ -904,11 +898,6 @@ def main() -> None:
         )
     weather_summary = json.loads(args.weather_summary.read_text())
     daily_weather = json.loads(args.daily_weather.read_text())
-    radar_summary = (
-        json.loads(args.radar_summary.read_text())
-        if args.radar_summary.exists()
-        else None
-    )
     landsat_summary = (
         json.loads(args.landsat_summary.read_text())
         if args.landsat_summary.exists()
@@ -1023,26 +1012,6 @@ def main() -> None:
                 }
                 for feature in RAW_20M_BANDS
             },
-        },
-        "radar": {
-            "status": (
-                radar_summary.get("status", "not_ingested")
-                if radar_summary
-                else "not_ingested"
-            ),
-            "sceneCount": (
-                radar_summary.get("sceneCount", 0)
-                if radar_summary
-                else 0
-            ),
-            "role": (
-                "experimental supplementary signal only; excluded from optical "
-                "scores unless a local RTC ingestion is present"
-            ),
-            "requiredProduct": (
-                "Radiometrically terrain-corrected Sentinel-1 backscatter; "
-                "raw GRD digital numbers are rejected."
-            ),
         },
         "landsat": {
             "status": (

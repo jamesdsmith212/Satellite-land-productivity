@@ -93,27 +93,6 @@ For each field and crop, a leave-one-season-out median trajectory is used to
 calculate normal-curve RMSE and signed deviation when another comparable
 season exists.
 
-## Experimental radar supplement
-
-The radar path accepts only the
-[NASA OPERA Level-2 RTC-S1 product](https://registry.opendata.aws/nasa-operal2rtc-s1v1/).
-It stores VV dB, VH dB, VV-minus-VH dB and the linear VH/VV ratio at native
-30 m support. OPERA provides radiometrically terrain-corrected gamma0 and
-layover/shadow masking. [Copernicus explains why radiometric terrain
-correction matters for Sentinel-1 backscatter](https://documentation.dataspace.copernicus.eu/Data/Sentinel1.html).
-
-The default farm-agnostic fixture records radar as `not_ingested`; this path is
-not part of the validated optical workflow. Raw Sentinel-1 GRD digital numbers
-are rejected. Radar remains supplementary:
-it is stored and queryable but is not silently blended into the optical score.
-An explicit, validated combination rule is required before that changes.
-
-The RTC cache uses a fixed 30 m farm analysis grid aligned independently of
-the Sentinel-2 display origin. Field boundaries are rasterised directly on
-that grid, float32 precision is retained, and the cache context hashes the
-grid, field mask and feature version. Acquisition time, burst identity,
-spacecraft and orbit metadata are retained where OPERA/CMR supplies them.
-
 ## Separate Landsat history
 
 Landsat Collection 2 Level-2 surface reflectance is a separate long-history

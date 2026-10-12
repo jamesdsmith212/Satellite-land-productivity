@@ -5,8 +5,6 @@ import sqlite3
 import sys
 import tempfile
 import unittest
-from unittest import mock
-from urllib.parse import parse_qs, urlparse
 from datetime import date
 from pathlib import Path
 
@@ -32,10 +30,6 @@ satellite_features = load_script(
     "satellite_features.py",
 )
 ndvi = load_script("satellite_productivity_detection_ndvi", "fetch-ndvi.py")
-radar = load_script(
-    "satellite_productivity_detection_radar",
-    "fetch-sentinel1-rtc.py",
-)
 landsat = load_script(
     "satellite_productivity_detection_landsat",
     "fetch-landsat.py",
@@ -405,148 +399,6 @@ class NdviPipelineTests(unittest.TestCase):
 
         np.testing.assert_array_equal(combined, np.array([[50, 50]]))
         np.testing.assert_array_equal(counts, np.array([[2, 2]], dtype=np.uint8))
-
-    def test_radar_features_require_positive_rtc_gamma0_values(self):
-        radar = satellite_features.calculate_sentinel1_rtc_features(
-            np.array([[0.1, 0.0]], dtype=np.float32),
-            np.array([[0.01, 0.01]], dtype=np.float32),
-            np.array([[True, True]]),
-        )
-
-        self.assertAlmostEqual(float(radar["vv_db"][0, 0]), -10, places=5)
-        self.assertAlmostEqual(float(radar["vh_db"][0, 0]), -20, places=5)
-        self.assertAlmostEqual(
-            float(radar["vv_minus_vh_db"][0, 0]),
-            10,
-            places=5,
-        )
-        self.assertAlmostEqual(float(radar["vh_vv_ratio"][0, 0]), 0.1)
-        self.assertTrue(np.isnan(radar["vv_db"][0, 1]))
-
-    def test_raw_sentinel_1_grd_is_rejected(self):
-        with self.assertRaisesRegex(ValueError, "raw GRD products are not accepted"):
-            radar.validate_item(
-                {
-                    "id": "S1A_IW_GRDH_example",
-                    "productType": "sentinel-1-grd",
-                    "units": "digital_number",
-                    "vv": "vv.tif",
-                    "vh": "vh.tif",
-                }
-            )
-
-    def test_official_earthdata_cloud_rtc_host_is_allowed(self):
-        path = radar.checked_raster_path(
-            "https://cumulus.asf.earthdatacloud.nasa.gov/example_VV.tif",
-            "present-but-not-printed",
-        )
-
-        self.assertTrue(path.startswith("/vsicurl?use_head=no&empty_dir=yes&url="))
-        self.assertIn(
-            "https%3A%2F%2Fcumulus.asf.earthdatacloud.nasa.gov%2F",
-            path,
-        )
-        with self.assertRaisesRegex(ValueError, "Unexpected RTC asset host"):
-            radar.checked_raster_path(
-                "https://earthdatacloud.nasa.gov.evil.example/example_VV.tif",
-                "present-but-not-printed",
-            )
-
-    def test_sentinel_1_registers_user_token_with_asf_client(self):
-        captured = {}
-
-        class Response:
-            status = 200
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *args):
-                return False
-
-        def fake_urlopen(request, timeout):
-            captured["request"] = request
-            captured["timeout"] = timeout
-            return Response()
-
-        with mock.patch.object(radar.urllib.request, "urlopen", fake_urlopen):
-            radar.authenticate_asf_token("test-secret-token")
-
-        request = captured["request"]
-        query = parse_qs(urlparse(request.full_url).query)
-        body = parse_qs(request.data.decode())
-        self.assertEqual(request.method, "POST")
-        self.assertEqual(query["client_id"], [radar.ASF_EDL_CLIENT_ID])
-        self.assertEqual(body["token"], ["test-secret-token"])
-        self.assertNotIn("test-secret-token", request.full_url)
-
-    def test_sentinel_1_uses_canonical_asf_url_before_gdal_redirects(self):
-        datapool = (
-            "https://datapool.asf.alaska.edu/RTC/OPERA-S1/"
-            "OPERA_L2_RTC-S1_T052-110287-IW1_20231221T063051Z_"
-            "20231223T005822Z_S1A_30_v1.0_VV.tif"
-        )
-
-        canonical = radar.canonicalize_asf_asset_url(datapool)
-        path = radar.checked_raster_path(datapool, "present-but-not-printed")
-
-        self.assertTrue(canonical.startswith("https://cumulus.asf.alaska.edu/"))
-        self.assertIn("%2FOPERA_L2_RTC-S1%2F", path)
-        self.assertNotIn("datapool", path)
-
-    def test_sentinel_1_grid_does_not_inherit_the_10m_origin(self):
-        grid = radar.native_grid(
-            {
-                "width": 344,
-                "height": 332,
-                "projection": "EPSG:32630",
-                "geotransform": [581490, 10, 0, 6158020, 0, -10],
-            }
-        )
-
-        self.assertEqual(grid["geotransform"][0] % 30, 0)
-        self.assertEqual(grid["geotransform"][3] % 30, 0)
-        self.assertLessEqual(grid["bounds"][0], 581490)
-        self.assertGreaterEqual(grid["bounds"][2], 584930)
-
-    def test_sentinel_1_sampling_balances_harvest_years_and_dates(self):
-        items = [
-            {"id": f"scene-{observed}", "date": observed}
-            for observed in (
-                "2020-10-01",
-                "2020-10-01",
-                "2021-02-01",
-                "2021-07-20",
-                "2021-10-05",
-                "2022-02-05",
-                "2022-07-25",
-            )
-        ]
-
-        selected = radar.seasonally_representative(items, 2)
-
-        self.assertEqual(len(selected), 4)
-        self.assertEqual(
-            {radar.harvest_year(item["date"]) for item in selected},
-            {2021, 2022},
-        )
-        self.assertEqual(len({item["date"] for item in selected}), 4)
-
-    def test_sentinel_1_cache_preserves_float32_precision(self):
-        values = np.linspace(-20, -19.9, 5000, dtype=np.float32)
-        stored = radar.cache_storage_array(values)
-
-        self.assertEqual(stored.dtype, np.float32)
-        self.assertGreater(len(np.unique(stored)), 4900)
-
-    def test_opera_product_identity_retains_burst_and_acquisition(self):
-        identity = radar.opera_identity(
-            "OPERA_L2_RTC-S1_T001-000001-IW1_20230713T061234Z_20230713T070000Z_S1A_30_v1.0"
-        )
-
-        self.assertEqual(identity["burstId"], "T001-000001-IW1")
-        self.assertEqual(identity["spacecraft"], "S1A")
-        self.assertEqual(identity["acquisitionDatetime"], "2023-07-13T06:12:34Z")
 
     def test_scale_offset_and_scl_mask_are_applied_before_ndvi(self):
         red_raw = np.full((7, 7), 3000, dtype=np.uint16)

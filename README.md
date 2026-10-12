@@ -25,6 +25,41 @@ The reusable application is released under the [MIT License](LICENSE). Farm
 records, boundaries, downloaded imagery and generated analysis products are
 not included.
 
+## How to run this for your farm
+
+You need two starting files: field boundaries as GeoJSON and crop history as a
+CSV, spreadsheet export or tab-separated file. The history should identify a
+stable field code, harvest year and crop wherever possible. The template at
+[`fixtures/demo-farm/raw/history.tsv`](fixtures/demo-farm/raw/history.tsv)
+shows the exact tab-separated import columns. An agent can normalise a CSV or
+spreadsheet export to that shape without changing your source file.
+
+The easiest route is to **point your agent at this page** and give it the two
+files. A useful prompt is:
+
+> Set up Satellite-land-productivity for my farm using these boundaries and
+> crop-history records. Keep every farm-specific file under `local-data/` and
+> do not commit or upload it. Create and review the farm profile, convert my
+> crop history to the import template where necessary, activate the farm, then
+> run the weather, Sentinel-2, performance and database steps. Stop and explain
+> any unmatched fields or incomplete records instead of guessing.
+
+The agent should create `local-data/farms/<farm-id>/profile.json`, run
+`npm run data:import`, and write `local-data/active-farm.json` with the selected
+workspace. It can then run, in order:
+
+```bash
+npm run data:weather
+npm run data:optical
+npm run data:performance
+npm run data:database
+npm run dev
+```
+
+All farm data and generated evidence stay in the ignored `local-data/`
+workspace. Review field matches, crop names and boundary counts before relying
+on the analysis. The commands below document each step in more detail.
+
 ## Run locally
 
 Node.js 22.13 or later is required.
@@ -74,7 +109,6 @@ local-data/farms/<farm-id>/
 ├── derived/      # weather, satellite and performance summaries
 ├── weather/      # downloaded daily weather
 ├── ndvi/         # cached Sentinel-2 arrays
-├── sentinel-1-rtc/
 ├── public/       # local browser layers
 └── analysis/     # SQLite database
 ```
@@ -162,7 +196,7 @@ establishment contributes to the trajectory. Spring crops begin on 15
 February. Exact sowing and harvest dates are still missing and the interface
 labels inferred stages as estimates.
 
-The formulas, trajectory thresholds, native-resolution rules, radar guardrails
+The formulas, trajectory thresholds and native-resolution rules
 and research caveat are documented in
 [`docs/phase-2-satellite-method.md`](docs/phase-2-satellite-method.md).
 
@@ -249,56 +283,6 @@ five quantile classes. Small low-confidence fragments are merged simultaneously
 into adjacent zones so the result is not dependent on cell iteration order;
 strongly contrasting features with at least 75% confidence are preserved.
 
-## Experimental Sentinel-1 radar evidence
-
-Radar is optional and is not part of the default workflow. Its status is
-`not_ingested` until a local RTC run succeeds. It remains supplementary and is
-not silently mixed into the optical score.
-The importer accepts only NASA OPERA Level-2 radiometrically
-terrain-corrected Sentinel-1 gamma0 products at native 30 m support. It rejects
-raw GRD digital numbers.
-
-Metadata discovery does not require credentials:
-
-```bash
-npm run data:radar -- --discover-only
-```
-
-Remote pixel access requires an Earthdata bearer token held only in the
-process environment. The importer registers the user token with ASF's
-published Earthdata client, then uses ASF Cumulus URLs for the protected
-range requests; the token is not written to disk:
-
-```bash
-EARTHDATA_TOKEN="..." npm run data:radar
-```
-
-The resulting VV, VH, VV-minus-VH and VH/VV features remain under the active
-farm's ignored `sentinel-1-rtc/` directory. If present, the database exposes them through
-`radar_dates`, `cell_radar_values` and `v_cell_radar_analysis`; it records that
-native 30 m values may repeat across 10 m display-cell joins.
-
-For a small credential check before downloading a larger archive, use the same
-Terminal session in which the token is set:
-
-```bash
-export EARTHDATA_TOKEN="..."
-npm run data:radar -- --max-scenes 3
-```
-
-The pilot sample spans the discovered time range. The token is read from the
-process environment and is never written to the cache or summary.
-
-For an inspectable seasonal sample, distribute acquisition dates across each
-September-August crop season:
-
-```bash
-npm run data:radar -- --scenes-per-harvest-year 6
-```
-
-This collapses duplicate acquisition dates and records the discovered and
-selected dates in the radar summary.
-
 ## Separate Landsat historical evidence
 
 Landsat Collection 2 Level-2 surface reflectance extends the historical
@@ -340,8 +324,8 @@ local-data/farms/<farm-id>/analysis/satellite-productivity-detection.sqlite
 ```
 
 The database retains every optical index and source band at
-field-cell-date grain, crop-stage features at field-year grain, and optional
-RTC radar features and the separate Landsat 30 m history when ingested. It
+field-cell-date grain, crop-stage features at field-year grain, and the
+separate Landsat 30 m history when ingested. It
 also includes ready-to-query same-crop and cross-crop
 persistence views. Raw indices are never directly combined across crops;
 cross-crop views use only relative scores normalised within each field and
@@ -377,7 +361,7 @@ npm test
 The suite builds the application, re-runs the synthetic farm import in a temporary
 directory, validates the active farm through generic invariants, verifies weather
 and satellite provenance, tests cloud masking, reflectance offsets, native
-resolution, multi-index weighting, phenology derivation and RTC rejection,
+resolution, multi-index weighting and phenology derivation,
 and confirms with synthetic cases that crop filtering, season independence,
 confidence, weather sensitivity and spatial-zone generation follow the
 documented rules.

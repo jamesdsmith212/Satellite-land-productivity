@@ -48,11 +48,9 @@ uploaded or deployed.
 - A separate native-30 m Landsat performance and trend track.
 - Cross-sensor agreement after Sentinel-2 cells are aggregated to the Landsat
   grid and both sensors are restricted to their shared year window.
-- Supplementary Sentinel-1 RTC ingestion with VV, VH, polarisation difference
-  and ratio features. Radar is not silently blended into optical scores.
 - A local SQLite analytical database containing crop history, rotation metrics,
   weather, spatial cells, crop-year composites, individual optical values,
-  Landsat and radar evidence.
+  and Landsat evidence.
 - Synthetic tests for crop-specific, rotation-specific, weather-specific,
   missing-record, split-field and changing-boundary cases.
 
@@ -88,7 +86,6 @@ local-data/farms/<farm-id>/
 ├── weather/         # local weather cache
 ├── ndvi/            # Sentinel-2 cache
 ├── landsat/         # Landsat cache
-├── sentinel-1-rtc/  # radar cache
 ├── public/          # local browser products
 ├── analysis/        # local SQLite database
 └── PROJECT-STATUS.md
@@ -139,11 +136,7 @@ Refresh upstream data only when required:
 npm run data:weather
 npm run data:optical
 npm run data:landsat
-npm run data:radar -- --scenes-per-harvest-year 6
 ```
-
-Sentinel-1 remote access requires `EARTHDATA_TOKEN` in the invoking Terminal.
-The token must not be written into tracked files or pasted into documentation.
 
 ## Verification status
 
@@ -178,8 +171,6 @@ npm run lint
   model does not reconstruct individual cutting cycles.
 - Weather is farm-level reanalysis context, not measured within-field weather.
 - Older Landsat years can be sparse, and Landsat remains a coarser 30 m track.
-- Sentinel-1 is supplementary database evidence; it is not yet a first-class
-  interactive map layer or part of the optical performance score.
 - Nutrient scenarios, soil-sampling recommendations and exportable field reports
   are not yet complete end-to-end workflows in the current map interface.
 - Farm-history editing exists locally, but every imported management attribute
@@ -191,13 +182,11 @@ npm run lint
    inspections or soil-test evidence.
 2. Add recorded sowing/harvest dates and historical boundary versions where
    available.
-3. Add an inspectable Sentinel-1 map and cross-sensor time-series view without
-   blending spatial resolutions.
-4. Add rotation-aware soil-sampling recommendations with the crop-history
+3. Add rotation-aware soil-sampling recommendations with the crop-history
    evidence shown for every proposed sample.
-5. Complete intended-next-crop nutrient scenarios while keeping soil supply,
+4. Complete intended-next-crop nutrient scenarios while keeping soil supply,
    crop demand and historical performance separate.
-6. Export a field report containing crop history, contributing crop-years,
+5. Export a field report containing crop history, contributing crop-years,
    sensor coverage, zone classification, dominance warnings and confidence.
 
 ## Version-control state

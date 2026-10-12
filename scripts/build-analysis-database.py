@@ -27,7 +27,6 @@ from farm_config import (
     LANDSAT_SUMMARY_PATH,
     NDVI_DIR,
     PERFORMANCE_SUMMARY_PATH,
-    RADAR_SUMMARY_PATH,
     WEATHER_SUMMARY_PATH,
     repository_display_path,
 )
@@ -444,30 +443,6 @@ CREATE TABLE cell_landsat_values (
     REFERENCES spatial_cells(field_code, cell_index)
 ) WITHOUT ROWID;
 
-CREATE TABLE radar_dates (
-  radar_date_id INTEGER PRIMARY KEY,
-  observation_date TEXT NOT NULL,
-  scene_id TEXT NOT NULL UNIQUE,
-  product_type TEXT NOT NULL,
-  native_support_metres INTEGER NOT NULL,
-  quality_mask TEXT,
-  source_file TEXT NOT NULL
-);
-
-CREATE TABLE cell_radar_values (
-  radar_date_id INTEGER NOT NULL REFERENCES radar_dates(radar_date_id),
-  field_code TEXT NOT NULL,
-  cell_index INTEGER NOT NULL,
-  vv_db REAL,
-  vh_db REAL,
-  vv_minus_vh_db REAL,
-  vh_vv_ratio REAL,
-  is_valid INTEGER NOT NULL CHECK (is_valid IN (0, 1)),
-  PRIMARY KEY (radar_date_id, field_code, cell_index),
-  FOREIGN KEY (field_code, cell_index)
-    REFERENCES spatial_cells(field_code, cell_index)
-) WITHOUT ROWID;
-
 CREATE TABLE data_dictionary (
   table_name TEXT NOT NULL,
   column_name TEXT NOT NULL,
@@ -500,8 +475,6 @@ CREATE INDEX cell_crop_year_field_cell_idx
   ON cell_crop_year_values(field_code, cell_index, season_id);
 CREATE INDEX cell_date_field_cell_idx
   ON cell_date_values(field_code, cell_index, date_id);
-CREATE INDEX radar_field_cell_date_idx
-  ON cell_radar_values(field_code, cell_index, radar_date_id);
 CREATE INDEX landsat_field_cell_date_idx
   ON cell_landsat_values(field_code, cell_index, landsat_date_id);
 
@@ -606,31 +579,6 @@ FROM cell_date_values v
 JOIN satellite_dates d ON d.date_id = v.date_id
 JOIN performance_crop_years p ON p.season_id = d.season_id
 JOIN rotation_records r ON r.season_id = d.season_id
-JOIN fields f ON f.field_code = v.field_code
-JOIN spatial_cells c
-  ON c.field_code = v.field_code AND c.cell_index = v.cell_index;
-
-CREATE VIEW v_cell_radar_analysis AS
-SELECT
-  v.field_code,
-  f.field_name,
-  v.cell_index,
-  c.easting_m,
-  c.northing_m,
-  c.longitude,
-  c.latitude,
-  d.observation_date,
-  d.scene_id,
-  d.product_type,
-  d.native_support_metres,
-  d.quality_mask,
-  v.vv_db,
-  v.vh_db,
-  v.vv_minus_vh_db,
-  v.vh_vv_ratio,
-  v.is_valid
-FROM cell_radar_values v
-JOIN radar_dates d ON d.radar_date_id = v.radar_date_id
 JOIN fields f ON f.field_code = v.field_code
 JOIN spatial_cells c
   ON c.field_code = v.field_code AND c.cell_index = v.cell_index;
@@ -786,13 +734,6 @@ DICTIONARY_ROWS = [
         "Stage- and coverage-weighted combination of within-field date ranks for one crop year.",
         "0–100",
         "Satellite Productivity Detection persistent-performance model.",
-    ),
-    (
-        "cell_radar_values",
-        "*",
-        "Supplementary Sentinel-1 radar features. Native 30 m values may repeat across joined 10 m display cells and are not silently promoted to 10 m evidence.",
-        None,
-        "NASA OPERA L2 RTC-S1 linear gamma0, converted to dB and polarisation ratios.",
     ),
     (
         "cell_landsat_values",
@@ -1506,85 +1447,6 @@ def insert_landsat(
     return len(summary["scenes"]), value_count
 
 
-def insert_radar(
-    connection: sqlite3.Connection,
-    summary_path: Path,
-    display_grid: dict,
-) -> tuple[int, int]:
-    if not summary_path.exists():
-        return 0, 0
-    summary = load_json(summary_path)
-    if summary.get("status") != "available":
-        return 0, 0
-    native_geotransform = summary["grid"]["geotransform"]
-    cells = connection.execute(
-        """
-        SELECT field_code, cell_index, farm_column, farm_row
-        FROM spatial_cells
-        ORDER BY field_code, cell_index
-        """
-    ).fetchall()
-    radar_value_count = 0
-    for radar_date_id, scene in enumerate(summary.get("scenes", []), start=1):
-        scene_path = local_scene_path(scene["sceneFile"])
-        with np.load(scene_path) as arrays:
-            features = {
-                name: arrays[name].astype(np.float32)
-                for name in (
-                    "vv_db",
-                    "vh_db",
-                    "vv_minus_vh_db",
-                    "vh_vv_ratio",
-                )
-            }
-        connection.execute(
-            "INSERT INTO radar_dates VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (
-                radar_date_id,
-                scene["date"],
-                scene["id"],
-                scene["productType"],
-                scene["nativeSupportMetres"],
-                scene.get("qualityMask"),
-                repository_display_path(scene_path),
-            ),
-        )
-        value_rows = []
-        for field_code, cell_index, farm_column, farm_row in cells:
-            native_row, native_column = native_cell_index(
-                farm_column,
-                farm_row,
-                display_grid["geotransform"],
-                native_geotransform,
-            )
-            values = [
-                feature[native_row, native_column]
-                if 0 <= native_row < feature.shape[0]
-                and 0 <= native_column < feature.shape[1]
-                else np.nan
-                for feature in features.values()
-            ]
-            valid = all(np.isfinite(value) for value in values)
-            value_rows.append(
-                (
-                    radar_date_id,
-                    field_code,
-                    cell_index,
-                    *[
-                        round(float(value), 4) if np.isfinite(value) else None
-                        for value in values
-                    ],
-                    int(valid),
-                )
-            )
-        connection.executemany(
-            "INSERT INTO cell_radar_values VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            value_rows,
-        )
-        radar_value_count += len(value_rows)
-    return len(summary.get("scenes", [])), radar_value_count
-
-
 def validate_database(connection: sqlite3.Connection, expected: dict) -> dict:
     table_counts = {
         table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
@@ -1600,8 +1462,6 @@ def validate_database(connection: sqlite3.Connection, expected: dict) -> dict:
             "cell_date_values",
             "landsat_dates",
             "cell_landsat_values",
-            "radar_dates",
-            "cell_radar_values",
         )
     }
     for table, count in expected.items():
@@ -1694,11 +1554,6 @@ def build_database(output_path: Path) -> dict:
             LANDSAT_SUMMARY_PATH,
             grid,
         )
-        radar_date_count, radar_value_count = insert_radar(
-            connection,
-            RADAR_SUMMARY_PATH,
-            grid,
-        )
         connection.executemany(
             "INSERT INTO data_dictionary VALUES (?, ?, ?, ?, ?)",
             DICTIONARY_ROWS,
@@ -1727,11 +1582,6 @@ def build_database(output_path: Path) -> dict:
             "source_boundaries": repository_display_path(BOUNDARIES_PATH),
             "source_weather": repository_display_path(DAILY_WEATHER_PATH),
             "source_performance": repository_display_path(PERFORMANCE_SUMMARY_PATH),
-            "source_radar": (
-                repository_display_path(RADAR_SUMMARY_PATH)
-                if RADAR_SUMMARY_PATH.exists()
-                else "not ingested"
-            ),
             "source_landsat": (
                 repository_display_path(LANDSAT_SUMMARY_PATH)
                 if LANDSAT_SUMMARY_PATH.exists()
@@ -1740,11 +1590,6 @@ def build_database(output_path: Path) -> dict:
             "landsat_role": (
                 "Separate long-history optical evidence at native 30 m support; "
                 "not fused into the Sentinel-2 performance score."
-            ),
-            "radar_role": (
-                "Supplementary OPERA RTC-S1 evidence at native 30 m support; "
-                "not included in the optical composite unless an explicit "
-                "model documents that combination."
             ),
         }
         connection.executemany(
@@ -1769,8 +1614,6 @@ def build_database(output_path: Path) -> dict:
             "cell_date_values": date_values,
             "landsat_dates": landsat_date_count,
             "cell_landsat_values": landsat_value_count,
-            "radar_dates": radar_date_count,
-            "cell_radar_values": radar_value_count,
         }
         table_counts = validate_database(connection, expected)
         connection.execute(

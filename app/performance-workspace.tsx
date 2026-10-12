@@ -6,7 +6,6 @@ import {
   calculateLandsatMetrics,
   sentinelScoresByLandsatCell,
   sourceAgreement,
-  type GridDefinition,
   type LandsatCellMetrics,
   type LandsatPayload,
 } from "@/lib/landsat-performance";
@@ -69,14 +68,6 @@ interface PerformanceIndex {
   excludedSeasonCount?: number;
   sceneErrorCount?: number;
   methodVersion: string;
-  radar?: {
-    status: string;
-    sceneCount: number;
-    role: string;
-    grid?: GridDefinition;
-    fieldUrlTemplate?: string;
-    requiredProduct: string;
-  };
   landsat?: {
     status: string;
     sceneCount: number;
@@ -2489,14 +2480,6 @@ function CurrentPerformanceWorkspace() {
                   signal is never treated as 10 m evidence, weather has no
                   artificial within-field variation, inferred stages are
                   labelled estimates, and causes require field evidence.
-                </p>
-              </div>
-              <div>
-                <span className={styles.miniLabel}>Cloud-resistant radar</span>
-                <p>
-                  {performanceIndex.radar?.status === "available"
-                    ? `${performanceIndex.radar.sceneCount} terrain-corrected Sentinel-1 scenes are available as supplementary 30 m evidence. They are not silently mixed into the optical score.`
-                    : "Sentinel-1 support is ready for terrain-corrected OPERA RTC inputs, but no radar scenes are currently ingested. Raw GRD digital numbers are rejected."}
                 </p>
               </div>
               <div>

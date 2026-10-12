@@ -25,7 +25,6 @@
     "data:optical": "python3 scripts/fetch-ndvi.py",
     "data:landsat": "python3 scripts/fetch-landsat.py",
     "data:performance": "python3 scripts/build-performance-model.py",
-    "data:radar": "python3 scripts/fetch-sentinel1-rtc.py",
     "data:database": "python3 scripts/build-analysis-database.py",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"

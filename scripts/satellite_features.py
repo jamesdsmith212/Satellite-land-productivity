@@ -40,30 +40,6 @@ RAW_20M_BANDS = (
     "swir22",
 )
 
-RADAR_FEATURES = {
-    "vv_db": {
-        "label": "Sentinel-1 VV backscatter",
-        "native_support_metres": 30,
-        "unit": "dB gamma0",
-    },
-    "vh_db": {
-        "label": "Sentinel-1 VH backscatter",
-        "native_support_metres": 30,
-        "unit": "dB gamma0",
-    },
-    "vv_minus_vh_db": {
-        "label": "Sentinel-1 VV minus VH",
-        "native_support_metres": 30,
-        "unit": "dB",
-    },
-    "vh_vv_ratio": {
-        "label": "Sentinel-1 VH/VV ratio",
-        "native_support_metres": 30,
-        "unit": "linear ratio",
-    },
-}
-
-
 def scaled_reflectance(raw: np.ndarray, asset: dict) -> np.ndarray:
     return raw.astype(np.float32) * asset.get("scale", 1) + asset.get("offset", 0)
 
@@ -180,34 +156,6 @@ def calculate_sentinel2_features(
         "ndre": ndre,
         "ndwi": ndwi,
         **masked_bands,
-    }
-
-
-def calculate_sentinel1_rtc_features(
-    vv_gamma0: np.ndarray,
-    vh_gamma0: np.ndarray,
-    valid_mask: np.ndarray,
-) -> dict[str, np.ndarray]:
-    """Calculate radar features only from terrain-corrected linear gamma0."""
-    valid = (
-        valid_mask
-        & np.isfinite(vv_gamma0)
-        & np.isfinite(vh_gamma0)
-        & (vv_gamma0 > 0)
-        & (vh_gamma0 > 0)
-    )
-    vv_db = np.full(vv_gamma0.shape, np.nan, dtype=np.float32)
-    vh_db = np.full(vh_gamma0.shape, np.nan, dtype=np.float32)
-    ratio = np.full(vv_gamma0.shape, np.nan, dtype=np.float32)
-    vv_db[valid] = 10 * np.log10(vv_gamma0[valid])
-    vh_db[valid] = 10 * np.log10(vh_gamma0[valid])
-    ratio[valid] = vh_gamma0[valid] / vv_gamma0[valid]
-    difference = vv_db - vh_db
-    return {
-        "vv_db": vv_db,
-        "vh_db": vh_db,
-        "vv_minus_vh_db": difference,
-        "vh_vv_ratio": ratio,
     }
 
 

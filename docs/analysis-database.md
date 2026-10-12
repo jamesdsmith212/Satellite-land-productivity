@@ -27,8 +27,6 @@ the `metadata.table_row_counts` JSON value. The principal grains are:
 | `cell_date_values` | Optical date × field cell × stored multi-index/band values |
 | `landsat_dates` | Ingested Landsat Collection 2 scene |
 | `cell_landsat_values` | Landsat scene × field × 10 m display-cell join |
-| `radar_dates` | Ingested OPERA RTC-S1 scene |
-| `cell_radar_values` | Radar scene × field × 10 m display-cell join |
 
 The exact counts and source paths used for a build are stored in `metadata`.
 Column definitions and units are available inside `data_dictionary`.
@@ -59,10 +57,6 @@ Column definitions and units are available inside `data_dictionary`.
   counts so sparse or crop-dominated evidence remains visible.
 - Weather is farm-level temporal context. It is not treated as within-field
   spatial variation.
-- Experimental Sentinel-1 radar is accepted only from OPERA radiometrically
-  terrain-corrected gamma0. It remains supplementary and native 30 m values
-  may repeat across their 10 m display-cell joins. The default status is
-  `not_ingested`.
 - Landsat is a separate native-30 m historical evidence track. Its NDVI,
   EVI2 and water-status ranks are never fused into the Sentinel-2 score;
   repeated rows in the 10 m cell join do not create extra spatial evidence.
@@ -233,25 +227,6 @@ SELECT
 FROM performance_crop_years
 WHERE field_code = 'example-field'
 ORDER BY harvest_year;
-```
-
-Inspect optional cloud-resistant radar evidence without confusing its native
-30 m support with the 10 m display join:
-
-```sql
-SELECT
-  field_name,
-  observation_date,
-  cell_index,
-  native_support_metres,
-  vv_db,
-  vh_db,
-  vv_minus_vh_db,
-  vh_vv_ratio
-FROM v_cell_radar_analysis
-WHERE field_code = 'example-field'
-  AND is_valid = 1
-ORDER BY observation_date, cell_index;
 ```
 
 Inspect the separate Landsat history:

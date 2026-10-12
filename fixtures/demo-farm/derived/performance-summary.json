@@ -14,7 +14,6 @@
     "ndre": { "native_support_metres": 20 },
     "ndwi": { "native_support_metres": 20 }
   },
-  "radar": { "status": "not_ingested", "sceneCount": 0, "role": "supplementary", "requiredProduct": "terrain-corrected RTC" },
   "fields": [
     {
       "fieldCode": "field-a",

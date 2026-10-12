@@ -47,7 +47,7 @@ test("performance index references every active mapped field", async () => {
   );
   assert.equal(summary.features.ndre.native_support_metres, 20);
   assert.equal(summary.features.evi2.native_support_metres, 10);
-  assert.match(summary.radar.requiredProduct, /terrain-corrected/);
+  assert.equal("radar" in summary, false);
 });
 
 test("portable synthetic performance data uses the corrected method version", async () => {
