@@ -1,0 +1,5 @@
+Field	Field_Year	Field code	Hectares	Acres	Year	Crop	crop_normalised	crop_simplified	Variety	Crop/variety
+Example field	Example field 2023	field-a	1	2.47	2023	Spring barley	spring_barley	cereal		Spring barley
+Example field	Example field 2024	field-a	1	2.47	2024	Winter wheat	winter_wheat	cereal		Winter wheat
+Example field	Example field 2025	field-a	1	2.47	2025	Spring beans	spring_beans	break		Spring beans
+Example field	Example field 2026	field-a	1	2.47	2026	Winter wheat	winter_wheat	cereal		Winter wheat

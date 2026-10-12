@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "methodVersion": "persistent-performance-v4-evidence-tiers",
+  "farmGrid": { "width": 4, "height": 4, "pixelSizeMetres": 10 },
+  "fieldCount": 1,
+  "seasonCount": 1,
+  "individualDateCount": 4,
+  "excludedSeasonCount": 0,
+  "sceneErrorCount": 0,
+  "sceneErrors": [],
+  "features": {
+    "ndvi": { "native_support_metres": 10 },
+    "evi2": { "native_support_metres": 10 },
+    "ndre": { "native_support_metres": 20 },
+    "ndwi": { "native_support_metres": 20 }
+  },
+  "radar": { "status": "not_ingested", "sceneCount": 0, "role": "supplementary", "requiredProduct": "terrain-corrected RTC" },
+  "fields": [
+    {
+      "fieldCode": "field-a",
+      "fieldName": "Example field",
+      "recordedHectares": 1,
+      "cellCount": 4,
+      "seasonCount": 1,
+      "excludedSeasonCount": 0,
+      "availableYears": [2026, 2026],
+      "cropCodes": ["winter_wheat"],
+      "url": "/data/performance/demo-farm-field-a.json"
+    }
+  ]
+}

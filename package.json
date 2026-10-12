@@ -1,0 +1,58 @@
+{
+  "name": "satellite-productivity-detection",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamesdsmith212/Satellite-land-productivity.git"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "data:prepare": "node scripts/prepare-active-farm.mjs",
+    "predev": "npm run data:prepare",
+    "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev --host 127.0.0.1",
+    "prebuild": "npm run data:prepare",
+    "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
+    "build:site": "npm run build && node scripts/compress-site-data.mjs",
+    "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
+    "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs && npm run test:pipelines",
+    "test:pipelines": "python3 -m unittest tests/test_local_data_pipelines.py",
+    "data:import": "node scripts/import-farm-data.mjs",
+    "data:weather": "python3 scripts/fetch-weather.py",
+    "data:optical": "python3 scripts/fetch-ndvi.py",
+    "data:landsat": "python3 scripts/fetch-landsat.py",
+    "data:performance": "python3 scripts/build-performance-model.py",
+    "data:radar": "python3 scripts/fetch-sentinel1-rtc.py",
+    "data:database": "python3 scripts/build-analysis-database.py",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.2",
+    "next": "16.2.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.37.1",
+    "@tailwindcss/postcss": "4.2.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.6",
+    "react-server-dom-webpack": "19.2.6",
+    "tailwindcss": "4.2.1",
+    "typescript": "5.9.3",
+    "vinext": "0.0.50",
+    "vite": "8.0.13",
+    "wrangler": "4.92.0"
+  },
+  "type": "module"
+}

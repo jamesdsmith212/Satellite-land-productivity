@@ -1,0 +1,23 @@
+{
+  "source": {
+    "boundaries": "synthetic fixture",
+    "history": "synthetic fixture"
+  },
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "historyRows": 4,
+  "historyFields": 1,
+  "boundaryFeatures": 1,
+  "exactBoundaryMatches": 1,
+  "aliasBoundaryMatches": [],
+  "historyOnlyFields": [],
+  "yearRange": { "start": 2023, "end": 2026 },
+  "cropCounts": [
+    { "crop": "spring_barley", "count": 1 },
+    { "crop": "spring_beans", "count": 1 },
+    { "crop": "winter_wheat", "count": 2 }
+  ],
+  "missingWeatherRows": 0,
+  "missingSowingDateRows": 4,
+  "missingHarvestDateRows": 4,
+  "missingSatelliteRows": 3
+}

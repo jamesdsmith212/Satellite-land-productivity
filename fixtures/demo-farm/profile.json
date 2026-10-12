@@ -1,0 +1,17 @@
+{
+  "id": "demo-farm",
+  "name": "Demo farm",
+  "historyLabel": "Synthetic crop history 2023–2026",
+  "boundaryLabel": "Synthetic 2026 boundaries",
+  "boundaryVersionPrefix": "DEMO-2026",
+  "currentHarvestYear": 2026,
+  "defaultFieldCode": "field-a",
+  "crs": "EPSG:32630",
+  "fieldAliases": {},
+  "expected": {
+    "historyRows": 4,
+    "historyFields": 1,
+    "boundaryFeatures": 1,
+    "aliasMatches": 0
+  }
+}

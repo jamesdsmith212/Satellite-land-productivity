@@ -1,0 +1,62 @@
+[
+  {
+    "field": "Example field",
+    "fieldYear": "Example field 2023",
+    "fieldCode": "field-a",
+    "hectares": 1,
+    "acres": 2.47,
+    "year": 2023,
+    "crop": "Spring barley",
+    "cropNormalised": "spring_barley",
+    "cropSimplified": "cereal",
+    "variety": "",
+    "cropVariety": "",
+    "boundaryUuid": "demo-boundary-a",
+    "boundaryName": "Example field"
+  },
+  {
+    "field": "Example field",
+    "fieldYear": "Example field 2024",
+    "fieldCode": "field-a",
+    "hectares": 1,
+    "acres": 2.47,
+    "year": 2024,
+    "crop": "Winter wheat",
+    "cropNormalised": "winter_wheat",
+    "cropSimplified": "cereal",
+    "variety": "",
+    "cropVariety": "",
+    "boundaryUuid": "demo-boundary-a",
+    "boundaryName": "Example field"
+  },
+  {
+    "field": "Example field",
+    "fieldYear": "Example field 2025",
+    "fieldCode": "field-a",
+    "hectares": 1,
+    "acres": 2.47,
+    "year": 2025,
+    "crop": "Spring beans",
+    "cropNormalised": "spring_beans",
+    "cropSimplified": "break",
+    "variety": "",
+    "cropVariety": "",
+    "boundaryUuid": "demo-boundary-a",
+    "boundaryName": "Example field"
+  },
+  {
+    "field": "Example field",
+    "fieldYear": "Example field 2026",
+    "fieldCode": "field-a",
+    "hectares": 1,
+    "acres": 2.47,
+    "year": 2026,
+    "crop": "Winter wheat",
+    "cropNormalised": "winter_wheat",
+    "cropSimplified": "cereal",
+    "variety": "",
+    "cropVariety": "",
+    "boundaryUuid": "demo-boundary-a",
+    "boundaryName": "Example field"
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "lastAvailableDate": "2026-07-31",
+  "source": {
+    "temperatureAndSoilMoisture": { "model": "synthetic", "nominalResolutionKm": 0 },
+    "precipitationAndEt0": { "model": "synthetic", "nominalResolutionKm": 0 },
+    "method": "Synthetic fixture for portable tests; not observed weather."
+  },
+  "baselines": {},
+  "harvestYears": {
+    "2023": { "spring": { "lastAvailableDate": "2023-08-31", "coverage": 1, "partial": false, "precipitationMm": 200, "et0Mm": 300, "waterBalanceMm": -100, "meanTemperatureC": 11, "waterBalanceZ": -0.5, "temperatureZ": 0, "moistureClass": "dry", "temperatureClass": "typical" } },
+    "2024": { "winter": { "lastAvailableDate": "2024-07-15", "coverage": 1, "partial": false, "precipitationMm": 600, "et0Mm": 350, "waterBalanceMm": 250, "meanTemperatureC": 9, "waterBalanceZ": 0.6, "temperatureZ": 0, "moistureClass": "wet", "temperatureClass": "typical" } },
+    "2025": { "spring": { "lastAvailableDate": "2025-08-31", "coverage": 1, "partial": false, "precipitationMm": 260, "et0Mm": 290, "waterBalanceMm": -30, "meanTemperatureC": 11, "waterBalanceZ": 0, "temperatureZ": 0, "moistureClass": "typical", "temperatureClass": "typical" } },
+    "2026": { "winter": { "lastAvailableDate": "2026-07-15", "coverage": 1, "partial": false, "precipitationMm": 500, "et0Mm": 360, "waterBalanceMm": 140, "meanTemperatureC": 10, "waterBalanceZ": 0.2, "temperatureZ": 0, "moistureClass": "typical", "temperatureClass": "typical" } }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "source": {
+    "collection": "synthetic",
+    "product": "Synthetic multi-index fixture",
+    "reflectanceCorrection": "Not applicable",
+    "cloudMask": "Not applicable"
+  },
+  "processedSceneCount": 4,
+  "growingSeasonItemCount": 4,
+  "growingSeasonDateCount": 4,
+  "sceneErrorCount": 0,
+  "fieldSeasonCount": 1,
+  "usableFieldSeasonCount": 1,
+  "seasons": [
+    {
+      "id": "demo-farm-field-a-2026",
+      "windowStart": "2025-09-01",
+      "windowEnd": "2026-07-15",
+      "windowMethod": "Synthetic crop window.",
+      "windowComplete": true,
+      "boundaryMethod": "Synthetic current boundary.",
+      "candidateObservationCount": 4,
+      "usableObservationCount": 4,
+      "usableDates": ["2025-10-01", "2026-02-01", "2026-05-15", "2026-07-01"],
+      "cellCoverage": 1,
+      "dataQuality": 100,
+      "peakMedianNdvi": 0.8,
+      "modelEligible": true,
+      "modelExclusionReason": null,
+      "estimatedPeakObservationDate": "2026-05-15",
+      "prePeakObservationCount": 2,
+      "postPeakObservationCount": 1
+    }
+  ]
+}
