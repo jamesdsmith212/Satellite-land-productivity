@@ -21,6 +21,7 @@
     "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs && npm run test:pipelines",
     "test:pipelines": "python3 -m unittest tests/test_local_data_pipelines.py",
     "data:import": "node scripts/import-farm-data.mjs",
+    "data:validate": "node scripts/import-farm-data.mjs --check",
     "data:weather": "python3 scripts/fetch-weather.py",
     "data:optical": "python3 scripts/fetch-ndvi.py",
     "data:landsat": "python3 scripts/fetch-landsat.py",

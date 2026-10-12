@@ -494,6 +494,8 @@ class NdviPipelineTests(unittest.TestCase):
             (date(2026, 3, 1), date(2026, 9, 30)),
         )
         self.assertIsNone(ndvi.crop_window("fallow", 2026))
+        for crop in ("temporary_grass", "permanent_grass"):
+            self.assertEqual(ndvi.crop_window(crop, 2026), ndvi.crop_window("grass", 2026))
 
 
 class WeatherPipelineTests(unittest.TestCase):

@@ -114,6 +114,14 @@ const ARABLE_SOURCE_CROPS = new Set([
   "winter_barley",
   "winter_beans",
   "winter_wheat",
+  "winter_feed_barley",
+  "winter_malting_barley",
+  "spring_feed_barley",
+  "spring_malting_barley",
+  "winter_oats",
+  "spring_oats",
+  "winter_oilseed_rape",
+  "spring_oilseed_rape",
 ]);
 
 const fieldsWithArableHistory = new Set(
@@ -126,32 +134,12 @@ export function sourceCropToTaxonomy(
   cropNormalised: string,
   fieldCode: string,
 ): string {
-  switch (cropNormalised) {
-    case "winter_wheat":
-      return "winter-wheat";
-    case "spring_wheat":
-      return "spring-wheat";
-    case "winter_barley":
-      return "winter-barley";
-    case "spring_barley":
-      return "spring-barley";
-    case "winter_beans":
-      return "winter-beans";
-    case "spring_beans":
-      return "spring-beans";
-    case "fallow":
-      return "fallow";
-    case "native_woodland":
-      return "native-woodland";
-    case "non_native_woodland":
-      return "non-native-woodland";
-    case "grass":
-      return fieldsWithArableHistory.has(fieldCode)
-        ? "temporary-grass"
-        : "permanent-grass";
-    default:
-      return "unknown";
+  if (cropNormalised === "grass") {
+    return fieldsWithArableHistory.has(fieldCode)
+      ? "temporary-grass"
+      : "permanent-grass";
   }
+  return getCrop(cropNormalised.replaceAll("_", "-")).code;
 }
 
 function rotationPosition(

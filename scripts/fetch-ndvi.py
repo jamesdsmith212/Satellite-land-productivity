@@ -618,7 +618,7 @@ def crop_window(crop: str, harvest_year: int) -> tuple[date, date] | None:
         return date(harvest_year - 1, 9, 1), date(harvest_year, 7, 15)
     if crop.startswith("spring_"):
         return date(harvest_year, 2, 15), date(harvest_year, 7, 31)
-    if crop == "grass":
+    if crop in ("grass", "temporary_grass", "permanent_grass"):
         return date(harvest_year, 3, 1), date(harvest_year, 9, 30)
     return None
 

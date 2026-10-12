@@ -34,13 +34,29 @@ stable field code, harvest year and crop wherever possible. The template at
 shows the exact tab-separated import columns. An agent can normalise a CSV or
 spreadsheet export to that shape without changing your source file.
 
+### Start with documents, not a tidy dataset
+
+If your records are scattered across spreadsheets, PDFs or farm notebooks,
+use the [pre-ingestion preparation pack](docs/PREPARE-FARM-DATA.md). It gives
+users and agents the [exact input schema](schemas/farm-ingestion.json), a
+[blank template](templates/history.tsv), a copyable preparation prompt and a
+local validation command. The agent structures your existing documents into
+candidate import files and a source-linked review; you approve uncertainties
+and field matches before importing. No new AI service or API key is required.
+
+**Point your agent at this page**, then ask it to follow that preparation
+guide with your documents. Documents alone cannot supply missing field
+geometry: you still need a real boundary export. Cloud agents may receive
+documents you give them; keep them local or approve that disclosure explicitly.
+
 The easiest route is to **point your agent at this page** and give it the two
 files. A useful prompt is:
 
 > Set up Satellite-land-productivity for my farm using these boundaries and
 > crop-history records. Keep every farm-specific file under `local-data/` and
 > do not commit or upload it. Create and review the farm profile, convert my
-> crop history to the import template where necessary, activate the farm, then
+> crop history using the pre-ingestion guide, validate and get my approval of
+> the preparation review before importing. Activate the farm, then
 > run the weather, Sentinel-2, performance and database steps. Stop and explain
 > any unmatched fields or incomplete records instead of guessing.
 
@@ -77,8 +93,9 @@ The repository includes an `.nvmrc`, so `nvm install` and `nvm use` select the
 tested Node.js version. Check `node --version` if `vinext` reports an error
 about `node:fs/promises`; Node 20 is not supported by the installed `vinext`.
 
-Open `http://localhost:3000`. Nothing in this workflow uploads or deploys the
-project. The weather and satellite commands below make read-only requests to
+Open the local link printed in your terminal (usually `http://localhost:3000`).
+This runs on your computer, not a hosted website. Nothing in this workflow
+uploads or deploys the project. The weather and satellite commands below make read-only requests to
 public data services using the farm centroid or bounding box; all downloaded
 farm windows remain in ignored local directories.
 

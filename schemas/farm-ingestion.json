@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "description": "Local preparation contract consumed by the farm importer; not a general JSON Schema.",
+  "history": {
+    "format": "UTF-8 TSV, one header line, no embedded tabs or newlines in cells",
+    "columns": ["Field", "Field_Year", "Field code", "Hectares", "Acres", "Year", "Crop", "crop_normalised", "crop_simplified", "Variety", "Crop/variety"],
+    "requiredValues": ["Field", "Field_Year", "Field code", "Year", "crop_normalised", "crop_simplified"],
+    "uniqueKey": ["Field code", "Year"],
+    "yearMeaning": "Harvest year, including winter crops sown in the previous calendar year",
+    "yearRange": [1900, 2200],
+    "areaUnits": {"Hectares": "ha", "Acres": "ac"},
+    "missingArea": "Blank or zero; never estimate from memory",
+    "cropGroups": {
+      "winter_wheat": "cereal", "spring_wheat": "cereal",
+      "winter_barley": "cereal", "spring_barley": "cereal",
+      "winter_feed_barley": "cereal", "winter_malting_barley": "cereal",
+      "spring_feed_barley": "cereal", "spring_malting_barley": "cereal",
+      "winter_oats": "cereal", "spring_oats": "cereal",
+      "winter_oilseed_rape": "break", "spring_oilseed_rape": "break",
+      "winter_beans": "break", "spring_beans": "break",
+      "temporary_grass": "grass", "permanent_grass": "grass", "grass": "grass",
+      "cover_crop": "cover", "fallow": "fallow",
+      "native_woodland": "woodland", "non_native_woodland": "woodland",
+      "unknown": "unknown"
+    }
+  },
+  "profile": {
+    "requiredStrings": ["id", "name", "historyLabel", "boundaryLabel", "boundaryVersionPrefix", "crs"],
+    "currentHarvestYear": "Integer harvest year",
+    "id": "Lowercase letters, numbers and hyphens",
+    "crs": "Local metric WGS84 UTM: EPSG:32601–32660 or EPSG:32701–32760, chosen from the farm location",
+    "fieldAliases": "Optional object: exact boundary field_name -> exact history Field",
+    "expected": "Optional non-negative integer counts: historyRows, historyFields, boundaryFeatures, aliasMatches"
+  },
+  "boundaries": {
+    "type": "FeatureCollection",
+    "geometry": "MultiPolygon",
+    "coordinates": "WGS84 longitude, latitude; closed rings with at least four positions",
+    "requiredProperties": ["field_name", "uuid"],
+    "uuid": "Unique stable identifier for each supplied boundary",
+    "matching": "One boundary per history field; reviewed aliases allowed",
+    "splitFields": "Separate stable field codes and supplied geometries for each cropped part; unresolved splits must not be imported as whole-field crops"
+  }
+}

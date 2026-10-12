@@ -1,6 +1,6 @@
 # Satellite Productivity Detection: project summary
 
-Status snapshot: 20 August 2026
+Status snapshot: 12 October 2026
 
 This is the canonical high-level summary of the farm-agnostic application. It
 deliberately excludes private farm names, boundaries, crop records and evidence
@@ -26,6 +26,10 @@ uploaded or deployed.
 ## What currently works
 
 - Farm-agnostic import of field boundaries and field-year crop history.
+- Agent-assisted document preparation pack with an exact input contract,
+  blank TSV template, source-linked review instructions and read-only
+  `data:validate` checks shared with the importer. It does not automatically
+  extract documents or import management notes and sowing/harvest dates.
 - A configurable crop taxonomy with winter, spring, cereal, break-crop, grass,
   fallow and unknown distinctions.
 - A crop-history interface and local loopback-only field-season editing API.

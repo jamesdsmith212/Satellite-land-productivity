@@ -1,12 +1,15 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { HISTORY_COLUMNS, validateFarmInput } from "./validate-farm-input.mjs";
 
-const [workspaceArgument, boundariesPath, historyPath] = process.argv.slice(2);
+const checkOnly = process.argv[2] === "--check";
+const args = process.argv.slice(checkOnly ? 3 : 2);
+const [workspaceArgument, boundariesPath, historyPath] = args;
 
-if (!workspaceArgument || !boundariesPath || !historyPath) {
+if (args.length !== 3 || !workspaceArgument || !boundariesPath || !historyPath) {
   throw new Error(
-    "Usage: node scripts/import-farm-data.mjs <farm-workspace> <boundaries.geojson> <history.tsv>",
+    "Usage: node scripts/import-farm-data.mjs [--check] <farm-workspace> <boundaries.geojson> <history.tsv>",
   );
 }
 
@@ -32,7 +35,10 @@ function positiveNumber(value) {
 function parseTsv(value) {
   const lines = value.replaceAll("\r", "").split("\n");
   if (lines.at(-1) === "") lines.pop();
-  const headers = lines[0].split("\t");
+  const headers = lines[0].replace(/^\uFEFF/, "").split("\t");
+  if (JSON.stringify(headers) !== JSON.stringify(HISTORY_COLUMNS)) {
+    throw new Error(`History headers must match templates/history.tsv in order: ${HISTORY_COLUMNS.join(", ")}.`);
+  }
   return lines.slice(1).map((line, rowIndex) => {
     const values = line.split("\t");
     if (values.length !== headers.length) {
@@ -41,7 +47,7 @@ function parseTsv(value) {
       );
     }
     return Object.fromEntries(
-      headers.map((header, columnIndex) => [header, values[columnIndex]]),
+      headers.map((header, columnIndex) => [header, values[columnIndex].trim()]),
     );
   });
 }
@@ -81,11 +87,12 @@ function polygonAreaHectares(geometry) {
 
 const rawBoundaries = JSON.parse(await readFile(boundariesPath, "utf8"));
 const rawHistory = parseTsv(await readFile(historyPath, "utf8"));
+validateFarmInput(profile, rawBoundaries, rawHistory);
 
 if (rawBoundaries.type !== "FeatureCollection") {
   throw new Error("The boundary file must be a GeoJSON FeatureCollection.");
 }
-if (expected.historyRows && rawHistory.length !== expected.historyRows) {
+if (expected.historyRows !== undefined && rawHistory.length !== expected.historyRows) {
   throw new Error(
     `Expected ${expected.historyRows} history rows; found ${rawHistory.length}.`,
   );
@@ -117,7 +124,7 @@ for (const row of rawHistory) {
   }
 }
 
-if (expected.historyFields && fields.size !== expected.historyFields) {
+if (expected.historyFields !== undefined && fields.size !== expected.historyFields) {
   throw new Error(
     `Expected ${expected.historyFields} unique history fields; found ${fields.size}.`,
   );
@@ -126,6 +133,9 @@ if (expected.historyFields && fields.size !== expected.historyFields) {
 const fieldsByNormalisedName = new Map(
   [...fields.values()].map((field) => [normaliseName(field.field), field]),
 );
+if (fieldsByNormalisedName.size !== fields.size) {
+  throw new Error("History field names collide after normalisation. Review field identities before importing.");
+}
 const boundaryMatches = new Map();
 const aliasReport = [];
 
@@ -164,7 +174,7 @@ for (const feature of rawBoundaries.features) {
 }
 
 if (
-  (expected.boundaryFeatures &&
+  (expected.boundaryFeatures !== undefined &&
     boundaryMatches.size !== expected.boundaryFeatures) ||
   (expected.aliasMatches !== undefined &&
     aliasReport.length !== expected.aliasMatches)
@@ -266,19 +276,21 @@ const report = {
 };
 
 const sourceDirectory = path.join(workspace, "source");
-await mkdir(sourceDirectory, { recursive: true });
-await writeFile(
-  path.join(sourceDirectory, "history.json"),
-  `${JSON.stringify(historyRows, null, 2)}\n`,
-);
-await writeFile(
-  path.join(sourceDirectory, "import-report.json"),
-  `${JSON.stringify(report, null, 2)}\n`,
-);
-await writeFile(
-  path.join(sourceDirectory, "boundaries.geojson"),
-  `${JSON.stringify(enrichedBoundaries)}\n`,
-);
+if (!checkOnly) {
+  await mkdir(sourceDirectory, { recursive: true });
+  await writeFile(
+    path.join(sourceDirectory, "history.json"),
+    `${JSON.stringify(historyRows, null, 2)}\n`,
+  );
+  await writeFile(
+    path.join(sourceDirectory, "import-report.json"),
+    `${JSON.stringify(report, null, 2)}\n`,
+  );
+  await writeFile(
+    path.join(sourceDirectory, "boundaries.geojson"),
+    `${JSON.stringify(enrichedBoundaries)}\n`,
+  );
+}
 
 console.log(
   JSON.stringify(
@@ -289,6 +301,17 @@ console.log(
       exactBoundaryMatches: report.exactBoundaryMatches,
       aliasBoundaryMatches: report.aliasBoundaryMatches.length,
       historyOnlyFields: report.historyOnlyFields.length,
+      ...(checkOnly ? {
+        validated: true,
+        filesWritten: 0,
+        warnings: [
+          `${historyRows.filter((row) => row.cropNormalised === "unknown").length} crop-years have unknown crops.`,
+          `${historyOnlyFields.length} history fields have no supplied boundary and cannot be mapped.`,
+          "Sowing/harvest dates and management notes are not imported by this TSV format; retain them in the preparation review.",
+          "Historical boundary versions are not supplied by this single-boundary import; historical maps use the supplied footprint.",
+          "Structural validation does not verify document extraction, crop truth, polygon topology or historical geometry. Review these before import.",
+        ],
+      } : {}),
     },
     null,
     2,
